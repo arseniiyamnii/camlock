@@ -5,6 +5,7 @@ import pygame.camera
 from os import listdir
 from os.path import isfile, join
 import subprocess
+import numpy
 
 pygame.camera.init()
 pygame.camera.list_cameras() #Camera detected or not
@@ -12,7 +13,8 @@ cam = pygame.camera.Camera("/dev/video0",(640,480))
 cam.start()
 onlyfiles = [f for f in listdir("owner") if isfile(join("owner", f))]
 bashCommand = "gsettings set org.gnome.desktop.session idle-delay "
-lastres = True
+lastres = False
+result = True
 while True:
     img = cam.get_image()
     pygame.image.save(img,"Unknown.jpg")
@@ -28,7 +30,9 @@ while True:
     try:        
         unknown_encoding = face_recognition.face_encodings(unknown_image)[0] # test image one
         results = face_recognition.compare_faces(ownerencodings, unknown_encoding)
-        result = bool(results[0])
+        result = bool(numpy.any(results))
+        # print(type(result))
+        # print(result)
     except:
         result = False
     if not result and lastres:
