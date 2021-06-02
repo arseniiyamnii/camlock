@@ -37,7 +37,7 @@ while True:
         result = False
     if not result and lastres:
         lastres = False
-        process = subprocess.Popen((bashCommand+"3").split(), stdout=subprocess.PIPE)
+        process = subprocess.Popen((bashCommand+"1").split(), stdout=subprocess.PIPE)
         print("stop")
     elif result and not lastres:
         lastres = True
