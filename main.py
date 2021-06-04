@@ -7,7 +7,7 @@ from os.path import isfile, join
 import subprocess
 import numpy
 import sys, signal
-
+import time
 def signal_handler(signal, frame):
     print("\nprogram exiting gracefully")
     sys.exit(0)
@@ -15,7 +15,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 pygame.camera.init()
 pygame.camera.list_cameras() #Camera detected or not
-cam = pygame.camera.Camera("/dev/video0",(640,480))
+cam = pygame.camera.Camera("/dev/video0",(320,240))
 cam.start()
 onlyfiles = [f for f in listdir("owner") if isfile(join("owner", f))]
 bashCommand = "gsettings set org.gnome.desktop.session idle-delay "
@@ -32,6 +32,7 @@ for i in onlyfiles:
 
 try:
     while True:
+        time.sleep(1)
         signal.signal(signal.SIGINT, signal_handler)
         img = cam.get_image()
         pygame.image.save(img,"Unknown.jpg")
@@ -46,7 +47,7 @@ try:
             result = False
         if not result and lastres:
             lastres = False
-            process = subprocess.Popen((bashCommand+"3").split(), stdout=subprocess.PIPE)
+            process = subprocess.Popen((bashCommand+"5").split(), stdout=subprocess.PIPE)
             print("stop")
         elif result and not lastres:
             lastres = True
