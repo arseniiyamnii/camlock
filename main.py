@@ -12,6 +12,8 @@ import signal
 import time
 import pickle
 
+TIMESLEEP = 3
+
 
 def change_delay(num):
     bashCommand = "gsettings set org.gnome.desktop.session idle-delay "
@@ -20,16 +22,20 @@ def change_delay(num):
     subprocess.Popen(("xdotool mousemove_relative -- 5 5").split())
 
 
-def is_change_delay(lastres, rec):
+def is_change_delay(lastres, rec, timestamp=0):
+    global TIMESLEEP
     if lastres:
+        time.sleep(1)
+    if time.time()-timestamp > 15+TIMESLEEP:
         time.sleep(2)
-
+    # elif timestamp != 0:
+        # print(time.time()-timestamp)
     if rec and not lastres:
         change_delay(300)
         print("i see you")
         lastres = True
     if not rec and lastres:
-        change_delay(3)
+        change_delay(TIMESLEEP)
         print("i cant see you")
         lastres = False
     return(lastres)
@@ -61,13 +67,11 @@ def init_cam():
 
 def img_rec(ownerencodings, image):
     try:
+
         unknown_encoding = face_recognition.face_encodings(image)[0]
-        results = face_recognition.compare_faces(
+        result = face_recognition.face_distance(
             ownerencodings, unknown_encoding)
-        try:
-            best = results.index(True)+1
-        except:
-            best = False
+        best = result.argmax()+1
     except:
         best = False
     return best
@@ -79,12 +83,19 @@ def main():
     lastres = is_change_delay(True, False)
     with open('owner.pickle', 'rb') as f:
         ownerencodings = pickle.load(f)
-
+    timestamp = False
     while True:
         unknown_image = make_photo_encod(cam)  # recognize photo
+        # dis = face_recognition.face_distance(ownerencodings, face_recognition.face_encodings(unknown_image)[0])
+        # print(dis)
+        # print(dis.max())
+        # print(dis.argmax())
+        # print(dis[max(dis)])
+
         best = img_rec(ownerencodings, unknown_image)
-        # print(best)
+        print(best)
         if bool(best):
+            timestamp = False
             while True:
                 unknown_image = make_photo_encod(cam)
                 best = img_rec([ownerencodings[best-1]], unknown_image)
@@ -93,7 +104,10 @@ def main():
                 if not best:
                     break
         else:
-            lastres = is_change_delay(lastres, False)
+            if not timestamp:
+                timestamp = time.time()
+            lastres = is_change_delay(lastres, False, timestamp)
+
         # time.sleep(1)
 
 
@@ -104,18 +118,19 @@ def scan():
             ownerencodings = pickle.load(f)
     except Exception:
         ownerencodings = []
-
     while True:
-        print("Take photo? y/(any other key to stop): ")
-        if input() == "y":
+        print("Take photo? Enter/(any key to stop): ")
+        try:
+            y = input()
+        except SyntaxError:
+            y = ""
+        if y == "":
             known_image = make_photo_encod(cam)
             try:
-                biden_encoding = face_recognition.face_encodings(known_image)[
-                    0]
+                biden_encoding = face_recognition.face_encodings(known_image)[0]
                 ownerencodings.append(biden_encoding)
             except Exception:
                 pass
-            os.remove("Unknown.jpg")
         else:
             with open("owner.pickle", "wb") as f:
                 pickle.dump(ownerencodings, f)
