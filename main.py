@@ -11,8 +11,13 @@ import sys
 import signal
 import time
 import pickle
+from termcolor import colored
+import datetime
 
 TIMESLEEP = 3
+FIRST_DELAY = (subprocess.check_output("gsettings get org.gnome.desktop.session idle-delay".split())).split()[1].decode("utf-8")
+lasttime = time.time()
+# print(FIRST_DELAY)
 
 
 def change_delay(num):
@@ -22,21 +27,31 @@ def change_delay(num):
     subprocess.Popen(("xdotool mousemove_relative -- 5 5").split())
 
 
-def is_change_delay(lastres, rec, timestamp=0):
+def is_change_delay(lastres, rec, timestamp):
     global TIMESLEEP
+    global FIRST_DELAY
+    global lasttime
     if lastres:
         time.sleep(1)
-    if time.time()-timestamp > 15+TIMESLEEP:
-        time.sleep(2)
+    if timestamp and time.time()-timestamp > 15+TIMESLEEP:
+        time.sleep(5)
     # elif timestamp != 0:
         # print(time.time()-timestamp)
     if rec and not lastres:
-        change_delay(300)
-        print("i see you")
+        change_delay(FIRST_DELAY)
+        print(colored(str(int(time.time()-lasttime)), "red"))
+        print(colored(str(datetime.datetime.now().time())[:-7], "green"), end="\r")
+        print(colored(str(datetime.datetime.now().time())[:-7], "green"), end=" ")
+
+        lasttime=time.time()
         lastres = True
     if not rec and lastres:
         change_delay(TIMESLEEP)
-        print("i cant see you")
+        print(colored(str(int(time.time()-lasttime)), "green"))
+        print(colored(str(datetime.datetime.now().time())[:-7], "red"), end="\r")
+        print(colored(str(datetime.datetime.now().time())[:-7], "red"), end=" ")
+
+        lasttime=time.time()
         lastres = False
     return(lastres)
 
@@ -78,37 +93,31 @@ def img_rec(ownerencodings, image):
 
 
 def main():
-    # init camera
     cam = init_cam()
-    lastres = is_change_delay(True, False)
-    with open('owner.pickle', 'rb') as f:
-        ownerencodings = pickle.load(f)
-    timestamp = False
+    lastres = False  # is_change_delay(True, False)
+    try:
+        with open('owner.pickle', 'rb') as f:
+            ownerencodings = pickle.load(f)
+    except:
+        print("run -$./start-monitor.sh scan")
+    timestamp = time.time()
     while True:
         unknown_image = make_photo_encod(cam)  # recognize photo
-        # dis = face_recognition.face_distance(ownerencodings, face_recognition.face_encodings(unknown_image)[0])
-        # print(dis)
-        # print(dis.max())
-        # print(dis.argmax())
-        # print(dis[max(dis)])
-
         best = img_rec(ownerencodings, unknown_image)
-        print(best)
+        # print(best)
         if bool(best):
-            timestamp = False
             while True:
                 unknown_image = make_photo_encod(cam)
                 best = img_rec([ownerencodings[best-1]], unknown_image)
                 if best:
-                    lastres = is_change_delay(lastres, True)
+                    lastres = is_change_delay(lastres, True, timestamp)
+                    timestamp = False
                 if not best:
                     break
         else:
             if not timestamp:
                 timestamp = time.time()
             lastres = is_change_delay(lastres, False, timestamp)
-
-        # time.sleep(1)
 
 
 def scan():
