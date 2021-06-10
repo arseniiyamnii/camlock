@@ -64,10 +64,10 @@ def signal_handler(signal, frame):
 def make_photo_encod(cam):
     signal.signal(signal.SIGINT, signal_handler)
     img = cam.get_image()
-    pygame.image.save(img, "Unknown.jpg")
+    pygame.image.save(img, "/tmp/pycamUnknown.jpg")
     unknown_encoding = face_recognition.load_image_file(
-        "Unknown.jpg")  # recognize photo
-    os.remove("Unknown.jpg")
+        "/tmp/pycamUnknown.jpg")  # recognize photo
+    os.remove("/tmp/pycamUnknown.jpg")
     return(unknown_encoding)
 
 
@@ -96,8 +96,9 @@ def main():
     cam = init_cam()
     lastres = False  # is_change_delay(True, False)
     try:
-        with open('owner.pickle', 'rb') as f:
+        with open(os.path.expanduser("~")+'/.owner.pickle', 'rb') as f:
             ownerencodings = pickle.load(f)
+        f.close()
     except:
         print("run -$./start-monitor.sh scan")
     timestamp = time.time()
@@ -123,7 +124,7 @@ def main():
 def scan():
     cam = init_cam()
     try:
-        with open('owner.pickle', 'rb') as f:
+        with open(os.path.expanduser("~")+'/.owner.pickle', 'rb') as f:
             ownerencodings = pickle.load(f)
     except Exception:
         ownerencodings = []
@@ -141,13 +142,14 @@ def scan():
             except Exception:
                 pass
         else:
-            with open("owner.pickle", "wb") as f:
+            with open(os.path.expanduser("~")+"/.owner.pickle", "wb") as f:
                 pickle.dump(ownerencodings, f)
             break
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "start":
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "scan":
+            scan()
+    else:
         main()
-    if sys.argv[1] == "scan":
-        scan()
