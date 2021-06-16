@@ -33,7 +33,7 @@ def is_change_delay(lastres, rec, timestamp):
     global lasttime
     if lastres:
         time.sleep(1)
-    if timestamp and time.time()-timestamp > 15+TIMESLEEP:
+    if timestamp and time.time()-timestamp > 30+TIMESLEEP:
         time.sleep(5)
     # elif timestamp != 0:
         # print(time.time()-timestamp)
@@ -86,7 +86,12 @@ def img_rec(ownerencodings, image):
         unknown_encoding = face_recognition.face_encodings(image)[0]
         result = face_recognition.face_distance(
             ownerencodings, unknown_encoding)
-        best = result.argmax()+1
+        # if result[result.argmax()]>xxx:
+        if float(result[result.argmax()]) > 0.3:
+            best = result.argmax()+1
+        else:
+            best = False
+
     except:
         best = False
     return best

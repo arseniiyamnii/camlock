@@ -3,6 +3,7 @@ Description=My Shell Script
 
 [Service]
 ExecStart=/usr/bin/pycam.sh
+ExecStop=gsettings set org.gnome.desktop.session idle-delay 1000
 
 [Install]
 WantedBy=multi-user.target
