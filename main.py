@@ -14,7 +14,7 @@ import pickle
 from termcolor import colored
 import datetime
 
-TIMESLEEP = 3
+TIMESLEEP = 2
 FIRST_DELAY = (subprocess.check_output("gsettings get org.gnome.desktop.session idle-delay".split())).split()[1].decode("utf-8")
 lasttime = time.time()
 # print(FIRST_DELAY)
@@ -27,14 +27,26 @@ def change_delay(num):
     subprocess.Popen(("xdotool mousemove_relative -- 5 5").split())
 
 
+
+def xsecidledelay(sec):
+    timestart=time.time()
+    while time.time()-timestart<sec:
+        time.sleep(0.5)
+        if int(subprocess.check_output("xssstate -i".split()).decode("utf-8")) < 2000:
+            break
+
+
 def is_change_delay(lastres, rec, timestamp):
     global TIMESLEEP
     global FIRST_DELAY
     global lasttime
+    # print(int(subprocess.check_output("xssstate -i".split()).decode("utf-8")))
     if lastres:
         time.sleep(1)
-    if timestamp and time.time()-timestamp > 30+TIMESLEEP:
-        time.sleep(5)
+    if timestamp and time.time()-timestamp > 5+TIMESLEEP:
+        xsecidledelay(15)
+        # if int(subprocess.check_output("xssstate -i".split()).decode("utf-8")) > 4000:
+            # time.sleep(5)
     # elif timestamp != 0:
         # print(time.time()-timestamp)
     if rec and not lastres:
@@ -87,13 +99,15 @@ def img_rec(ownerencodings, image):
         result = face_recognition.face_distance(
             ownerencodings, unknown_encoding)
         # if result[result.argmax()]>xxx:
-        if float(result[result.argmax()]) > 0.3:
-            best = result.argmax()+1
+        # print(result)
+        if float(result[result.argmin()]) < 0.5:
+            best = result.argmin()+1
         else:
             best = False
 
     except:
         best = False
+    # print(best)
     return best
 
 
