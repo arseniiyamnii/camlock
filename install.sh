@@ -4,7 +4,7 @@ if [ "$1" == "--uninstall" ]; then
 	sudo rm /usr/bin/pycam.sh
 	sudo rm /usr/bin/pycam-service
 	sudo rm ~/.config/systemd/user/pycam.service
-if [ "$1" == "--hard" ]; then
+elif [ "$1" == "--hard" ]; then
 	sudo touch ~/.owner.pickle
 	sudo cp pycam.sh /usr/bin/pycam.sh
 	sudo cp main.py /usr/bin/pycam-service
